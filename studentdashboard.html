@@ -110,7 +110,7 @@
     const regNumberDisplay = document.getElementById("regNumberDisplay");
     const welcomeMsg = document.getElementById("welcomeMsg");
     const logoutBtn = document.getElementById("logoutBtn");
-
+    const BASE_URL = window.location.origin;
     const scanBtn = document.getElementById('scanQrBtn');
     const qrReader = document.getElementById('qrReader');
     const attendanceList = document.getElementById('attendanceHistory');
@@ -133,7 +133,7 @@
     // Logout
     logoutBtn.addEventListener("click", () => {
       sessionStorage.removeItem("studentRegNumber");
-      window.location.href = "./index.html";
+      window.location.href = "/";
     });
 
     // Left column QR button
@@ -174,8 +174,9 @@
     // Handle attendance scan for both scanners
     async function handleAttendanceScan(decodedText) {
       try {
+
         const data = JSON.parse(decodedText);
-        const res = await fetch('http://localhost:3000/attendance/mark', {
+        const res = await fetch(`${BASE_URL}/attendance/mark`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ regNumber, subject: data.subject })
@@ -193,7 +194,7 @@
     // Old attendance history list
     async function loadAttendance() {
       try {
-        const res = await fetch(`http://localhost:3000/attendance/${regNumber}`);
+        const res = await fetch(`${BASE_URL}/attendance/${regNumber}`);
         const data = await res.json();
         attendanceList.innerHTML = '';
         if (data.records.length === 0) {
@@ -221,7 +222,7 @@
     // New attendance records + summary
     async function loadAttendanceNew() {
       try {
-        const res = await fetch(`http://localhost:3000/attendance/${regNumber}`);
+        const res = await fetch(`${BASE_URL}/attendance/${regNumber}`);
         const data = await res.json();
         
         // Update Attendance Records

@@ -68,8 +68,8 @@
   </div>
 
   <script>
-    const API_URL = "http://localhost:3000"; // Your Express backend
-
+    const BASE_URL = window.location.origin;
+    const API_URL = BASE_URL; // Your Express backend
     const loginTab = document.getElementById("loginTab");
     const registerTab = document.getElementById("registerTab");
     const loginForm = document.getElementById("loginForm");

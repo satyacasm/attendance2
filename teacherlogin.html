@@ -131,7 +131,7 @@
         e.preventDefault();
         const email = document.getElementById('email').value.trim().toLowerCase();
         const password = document.getElementById('password').value.trim();
-
+        const BASE_URL = window.location.origin;
         if (!email || !password) {
           showModal('Error', 'Please fill in all fields.', true);
           return;
@@ -140,7 +140,7 @@
         const endpoint = isLogin ? '/login' : '/register';
 
         try {
-          const res = await fetch(`http://localhost:3000${endpoint}`, {
+          const res = await fetch(`${BASE_URL}${endpoint}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })

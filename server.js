@@ -9,6 +9,7 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const cron = require('node-cron');
+const path = require('path');
 
 const app = express();
 const PORT = 3000;
@@ -283,6 +284,24 @@ cron.schedule('59 23 * * *', async () => {
   }
   console.log('✅ Daily decrement complete');
 });
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+app.get('/teacherlogin.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'teacherlogin.html'));
+});
+app.get('/studentlogin.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'studentlogin.html'));
+});
+app.get('/studentdashboard.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'studentdashboard.html'));
+});
+app.get('/teacherdashboard.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'teacherdashboard.html'));
+});
+
+
 
 // ======================
 // 🔹 START SERVER
