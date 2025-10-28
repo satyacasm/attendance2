@@ -313,6 +313,27 @@ cron.schedule('59 23 * * *', async () => {
   console.log('✅ Daily decrement complete');
 });
 
+// ======================
+// 🔹 Fetch Attendance by Subject (Teacher View)
+// ======================
+app.get('/attendance/subject/:subject', authenticate, async (req, res) => {
+  try {
+    const { subject } = req.params;
+    if (!subject) return res.status(400).json({ message: 'Subject required' });
+
+    // Only show data for teacher's subjects
+    const subj = await Subject.findOne({ name: subject, teacherEmail: req.teacher.email });
+    if (!subj) return res.status(403).json({ message: 'Unauthorized subject access' });
+
+    const records = await Attendance.find({ subject }).sort({ date: -1 });
+    res.json({ records });
+  } catch (err) {
+    console.error('Error fetching attendance:', err);
+    res.status(500).json({ message: 'Server error fetching attendance' });
+  }
+});
+
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
