@@ -70,6 +70,7 @@ const Attendance = mongoose.model('Attendance', attendanceSchema);
 const qrSessionSchema = new mongoose.Schema({
   subject: { type: String, required: true },
   qrId: { type: String, required: true, unique: true },
+  baseUrl: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
   expiresAt: { type: Date, required: true }
 });
@@ -193,12 +194,12 @@ app.post('/student/login', async (req, res) => {
 
 // Create new QR session (valid for 5 minutes)
 app.post('/attendance/session', authenticate, async (req, res) => {
-  const { subject } = req.body;
-  if (!subject) return res.status(400).json({ message: 'Subject required' });
+  const { subject, baseUrl } = req.body;
+  if (!subject || !baseUrl) return res.status(400).json({ message: 'Subject and baseUrl required' });
   const qrId = `${subject}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
-  await QrSession.create({ subject, qrId, expiresAt });
-  res.json({ message: 'QR session created', qrId, expiresAt });
+  await QrSession.create({ subject, qrId, baseUrl, expiresAt });
+  res.json({ message: 'QR session created', qrId, expiresAt, qrUrl: `${baseUrl}/attendance/mark/:regNumber/${subject}/${new Date().toISOString().split('T')[0]}` });
 });
 
 // Student scans QR to mark attendance (+1)
@@ -231,6 +232,33 @@ app.post('/attendance/mark', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ✅ NEW ENDPOINT — Automatic marking via QR URL
+app.get('/attendance/mark/:regNumber/:subject/:date', async (req, res) => {
+  try {
+    const { regNumber, subject, date } = req.params;
+    if (!regNumber || !subject || !date)
+      return res.status(400).json({ message: 'Missing parameters' });
+
+    let record = await Attendance.findOne({ regNumber, subject, date });
+
+    if (record && record.status === 'present')
+      return res.send(`<h3>Attendance already marked as present for ${subject} on ${date}</h3>`);
+
+    if (!record)
+      record = new Attendance({ regNumber, subject, date, status: 'present', scoreChange: +1 });
+    else {
+      record.status = 'present';
+      record.scoreChange = +1;
+    }
+
+    await record.save();
+    res.send(`<h3>✅ Attendance marked present for ${subject} on ${date}</h3>`);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('<h3>❌ Server error marking attendance</h3>');
   }
 });
 
@@ -300,8 +328,6 @@ app.get('/studentdashboard.html', (req, res) => {
 app.get('/teacherdashboard.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'teacherdashboard.html'));
 });
-
-
 
 // ======================
 // 🔹 START SERVER
